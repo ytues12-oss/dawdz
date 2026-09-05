@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DawDZ — Livraison express dans toute l'Algérie</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="cities.js"></script>
+<style>
+:root{
+  --green:#00A86B; --green-d:#00855a; --orange:#FF7A1A; --dark:#101828;
+  --gray:#667085; --bg:#F4F6F8; --card:#fff; --border:#E4E7EC; --blue:#2E6BE6;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--dark);padding-bottom:90px}
+.wrap{max-width:760px;margin:0 auto;padding:0 16px}
+header{background:linear-gradient(135deg,#04382A 0%,#00A86B 90%);color:#fff;padding:26px 0 54px}
+.logo{font-size:24px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+.logo .moto{font-size:28px}
+.hsub{margin-top:6px;opacity:.9;font-size:14px}
+.hero{margin-top:22px;font-size:26px;font-weight:800;line-height:1.25}
+.hero span{color:#FFD166}
+.hero-sub{margin-top:6px;font-size:14px;opacity:.92}
+.cities-strip{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.cities-strip span{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);border-radius:999px;padding:5px 11px;font-size:11px;font-weight:600}
+.steps{display:flex;gap:10px;margin-top:18px}
+.step{flex:1;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:12px;padding:10px 12px;font-size:12px;line-height:1.4}
+.step b{display:block;font-size:12px;margin-bottom:2px;color:#FFD166}
+section{display:none}
+section.active{display:block}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px;margin-top:16px;box-shadow:0 1px 3px rgba(16,24,40,.05)}
+h2{font-size:17px;margin-bottom:4px}
+.muted{color:var(--gray);font-size:13px}
+label{display:block;font-size:13px;font-weight:600;margin:14px 0 6px}
+input,select{width:100%;padding:12px 14px;border:1.5px solid var(--border);border-radius:12px;font-size:15px;background:#fff;color:var(--dark)}
+input:focus,select:focus{outline:none;border-color:var(--green)}
+.row{display:flex;gap:12px}
+.row>div{flex:1}
+.row small{display:block;font-size:12px;font-weight:600;margin:0 0 4px;color:var(--gray)}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:70px;padding:11px 8px;border:1.5px solid var(--border);background:#fff;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;color:var(--gray)}
+.seg button.sel{border-color:var(--green);background:#E8F8F1;color:var(--green-d)}
+.urgent{display:flex;align-items:center;gap:10px;margin-top:16px;background:#FFF4EC;border:1.5px solid #FFD9BD;border-radius:12px;padding:12px 14px;cursor:pointer;font-size:14px;font-weight:600}
+.urgent input{width:20px;height:20px;accent-color:var(--orange);flex:none}
+.feebox{margin-top:16px;background:var(--dark);color:#fff;border-radius:14px;padding:16px;display:flex;justify-content:space-between;align-items:center}
+.feebox .lbl{font-size:13px;opacity:.8}
+.feebox .val{font-size:24px;font-weight:800;color:#FFD166}
+.btn{display:inline-block;width:100%;margin-top:16px;padding:15px;border:none;border-radius:14px;background:var(--green);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+.btn:active{background:var(--green-d)}
+.btn.blue{background:var(--blue)}
+.btn.dark{background:var(--dark)}
+.btn.gold{background:#FFD166;color:#101828}
+.btn.sm{width:auto;margin:0;padding:9px 16px;font-size:13px;border-radius:10px}
+.mini{border:none;border-radius:9px;padding:7px 11px;font-size:12px;font-weight:700;cursor:pointer}
+.mini.red{background:#FEE2E2;color:#B91C1C}
+.mini.green{background:#E8F8F1;color:#047857}
+.mini.gray{background:#F2F4F7;color:var(--gray)}
+.myorders .ord{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px}
+.myorders .ord:last-child{border-bottom:none}
+.badge{display:inline-block;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700}
+.st-attente{background:#FFF4EC;color:#C2570B}
+.st-encours{background:#EBF2FF;color:#1D4ED8}
+.st-livree{background:#E8F8F1;color:#047857}
+.st-annulee{background:#FEE2E2;color:#B91C1C}
+.driver{display:flex;align-items:center;gap:12px;border:1.5px solid var(--border);border-radius:14px;padding:12px 14px;cursor:pointer;background:#fff}
+.driver.sel{border-color:var(--green);background:#E8F8F1}
+.avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#04382A,#00A86B);color:#fff;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:800;flex:none}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.ocard{border:1.5px solid var(--border);border-radius:14px;padding:14px;background:#fff}
+.ocard .route{font-weight:700;font-size:14px;margin:8px 0 4px}
+.ocard .route .arr{color:var(--green);margin:0 6px}
+.ocard .meta{font-size:12px;color:var(--gray)}
+.ocard .fee{font-size:18px;font-weight:800;color:var(--green-d);margin:8px 0}
+.active-order{background:linear-gradient(135deg,#04382A,#00A86B);color:#fff;border:none}
+.active-order .route{font-size:16px}
+.active-order .meta{color:rgba(255,255,255,.85)}
+.active-order .fee{color:#FFD166;font-size:22px}
+.statgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.stat{background:#fff;border:1px solid var(--border);border-radius:14px;padding:14px;text-align:center}
+.stat .n{font-size:21px;font-weight:800}
+.stat .l{font-size:11px;color:var(--gray);margin-top:2px}
+.stat.g .n{color:var(--green-d)}
+.stat.b .n{color:var(--blue)}
+.stat.o .n{color:var(--orange)}
+.filters{display:flex;gap:8px;margin:14px 0;flex-wrap:wrap}
+.filters button{padding:8px 14px;border-radius:999px;border:1.5px solid var(--border);background:#fff;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray)}
+.filters button.sel{background:var(--dark);color:#fff;border-color:var(--dark)}
+.tblwrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:640px}
+th{text-align:left;color:var(--gray);font-size:11px;text-transform:uppercase;letter-spacing:.4px;padding:8px 10px;border-bottom:2px solid var(--border)}
+td{padding:10px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr{cursor:pointer}
+tbody tr:hover{background:#F8FAFC}
+td.route b{font-weight:600}
+.pricecard{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.pricecard span{background:#E8F8F1;color:var(--green-d);border-radius:10px;padding:8px 12px;font-size:12px;font-weight:700}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.chip{display:inline-flex;align-items:center;gap:7px;background:#fff;border:1.5px solid var(--border);border-radius:999px;padding:8px 13px;font-size:12px;font-weight:700;cursor:pointer}
+.chip .dot{width:10px;height:10px;border-radius:50%}
+.chip.off{opacity:.45;border-style:dashed}
+#toast{position:fixed;left:50%;bottom:100px;transform:translateX(-50%) translateY(20px);background:var(--dark);color:#fff;padding:13px 20px;border-radius:12px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;z-index:70;max-width:90%;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.tabbar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--border);display:flex;z-index:40;box-shadow:0 -4px 16px rgba(16,24,40,.06)}
+.tab{flex:1;padding:10px 0 14px;border:none;background:none;font-size:12px;font-weight:600;color:var(--gray);cursor:pointer}
+.tab span{display:block;font-size:22px;margin-bottom:3px;filter:grayscale(1);opacity:.55}
+.tab.active{color:var(--green-d)}
+.tab.active span{filter:none;opacity:1}
+.modal{position:fixed;inset:0;background:rgba(16,24,40,.55);display:none;align-items:center;justify-content:center;z-index:60;padding:16px}
+.modal.open{display:flex}
+.modal-card{background:#fff;border-radius:18px;max-width:430px;width:100%;padding:20px;max-height:82vh;overflow:auto}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.tl{margin-top:14px;padding-left:16px;display:flex;flex-direction:column;gap:12px}
+.tl-item{position:relative;font-size:13px}
+.tl-item::before{content:"";position:absolute;left:-16px;top:4px;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 3px #E8F8F1}
+.tl-item span{display:block;color:var(--gray);font-size:12px}
+.setgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:10px}
+.setgrid label{margin-top:0}
+.setgrid input{padding:10px 12px;font-size:14px}
+.settings-note{font-size:12px;color:var(--gray);margin-top:10px;line-height:1.5}
+.credit{text-align:center;margin-top:12px;font-size:11px;font-weight:700;letter-spacing:.3px;opacity:.95}
+footer{text-align:center;color:var(--gray);font-size:12px;padding:26px 0 10px;line-height:1.6}
+.empty{text-align:center;color:var(--gray);font-size:14px;padding:26px 0}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo"><span class="moto">🏍️</span> <span id="brandName">DawDZ</span></div>
+    <div class="hsub">Livraison express dans toute l'Algérie 🇩🇿</div>
+    <div class="hero">Livraison en <span>30 minutes</span> ⚡</div>
+    <div class="hero-sub">Documents, colis, repas… 10 wilayas au lancement, paiement à la livraison partout.</div>
+    <div class="cities-strip" id="citiesStrip"></div>
+    <div class="credit">Application créée par Seghir Sofiane</div>
+    <div class="steps">
+      <div class="step"><b>1. Créez</b>Vous décrivez votre course</div>
+      <div class="step"><b>2. Acceptée</b>Un livreur moto accepte</div>
+      <div class="step"><b>3. Livrée</b>Paiement à la livraison</div>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ TAB COMMANDER ============ -->
+  <section id="tab-commande" class="active">
+    <div class="card">
+      <h2>📦 Créer une course</h2>
+      <p class="muted">Choisissez la ville : le tarif est calculé automatiquement selon la zone.</p>
+      <label>Ville</label>
+      <select id="fCity" onchange="changeFormCity()"></select>
+      <label>Prénom &amp; nom</label>
+      <input id="fName" placeholder="Ex : Amine Benali" autocomplete="off">
+      <label>Téléphone</label>
+      <input id="fPhone" placeholder="Ex : 0550 12 34 56" autocomplete="off">
+      <div class="row">
+        <div>
+          <label>📍 Récupération (départ)</label>
+          <select id="fFrom" onchange="updateEstimate()"></select>
+        </div>
+        <div>
+          <label>🏁 Livraison (arrivée)</label>
+          <select id="fTo" onchange="updateEstimate()"></select>
+        </div>
+      </div>
+      <label>Type d'objet</label>
+      <div class="seg" id="segType">
+        <button type="button" data-v="document" onclick="pickType(this)">📄 Document</button>
+        <button type="button" data-v="colis" class="sel" onclick="pickType(this)">📦 Colis</button>
+        <button type="button" data-v="repas" onclick="pickType(this)">🍔 Repas</button>
+        <button type="button" data-v="autre" onclick="pickType(this)">📎 Autre</button>
+      </div>
+      <label>Poids</label>
+      <div class="seg" id="segWeight">
+        <button type="button" data-v="leger" class="sel" onclick="pickWeight(this)">Léger &lt;1kg</button>
+        <button type="button" data-v="moyen" onclick="pickWeight(this)">Moyen 1-3kg</button>
+        <button type="button" data-v="lourd" onclick="pickWeight(this)">Lourd &gt;3kg</button>
+      </div>
+      <label class="urgent" style="margin:16px 0 0">
+        <input type="checkbox" id="fUrgent" onchange="updateEstimate()">
+        ⚡ Urgent (tarif majoré) — livraison en priorité
+      </label>
+      <div class="feebox">
+        <div>
+          <div class="lbl">Tarif estimé</div>
+          <div class="muted" style="color:rgba(255,255,255,.6);font-size:12px">Paiement à la livraison</div>
+        </div>
+        <div class="val" id="feeEst">—</div>
+      </div>
+      <button class="btn" type="submit" onclick="return createOrder(event)">🏍️ Créer la commande</button>
+    </div>
+    <div class="card myorders">
+      <h2>Mes commandes récentes</h2>
+      <p class="muted">📲 = envoyer la confirmation au client sur WhatsApp</p>
+      <div id="myOrders"></div>
+    </div>
+  </section>
+
+  <!-- ============ TAB LIVREUR ============ -->
+  <section id="tab-livreur">
+    <div class="card" id="driverLoginCard">
+      <h2>🏍️ Espace livreur — Connexion</h2>
+      <p class="muted">Chaque livreur a son propre compte. Choisissez le vôtre puis entrez votre code secret.</p>
+      <div id="driverLoginList" style="display:flex;flex-direction:column;gap:10px;margin-top:14px"></div>
+      <div id="pinBox" style="display:none;margin-top:16px;background:#F8FAFC;border:1px solid var(--border);border-radius:12px;padding:14px">
+        <label style="margin-top:0">Code secret de <span id="pinDriverName" style="color:var(--green-d)"></span></label>
+        <input id="pinInput" type="password" inputmode="numeric" maxlength="4" placeholder="••••" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="btn" onclick="doLogin()">🔓 Se connecter</button>
+        <button class="btn sm gray" style="background:#F2F4F7;color:var(--gray);margin-top:8px" onclick="cancelLogin()">← Retour</button>
+      </div>
+    </div>
+    <div id="driverDash">
+      <div class="card">
+        <div id="driverBanner"></div>
+      </div>
+      <div class="card" id="activeCard"></div>
+      <div id="drvMapWrap" style="display:none;margin-top:-4px">
+        <div id="drvMap" style="height:290px;border-radius:14px;border:1px solid var(--border);overflow:hidden"></div>
+        <div style="display:flex;gap:14px;font-size:11px;color:var(--gray);margin-top:6px"><span>🟠 D = départ</span><span>🟢 A = arrivée</span><span>🗺️ Carte OpenStreetMap — interactive</span></div>
+      </div>
+      <div class="card">
+        <h2>💰 Mes gains de la journée</h2>
+        <div class="statgrid" id="driverStats" style="margin-top:12px"></div>
+        <h2 style="margin-top:18px">📜 Mes dernières livraisons</h2>
+        <div id="driverHist" style="margin-top:8px"></div>
+      </div>
+      <div class="card">
+        <h2>📥 Courses disponibles</h2>
+        <p class="muted">La course la mieux rémunérée est en premier.</p>
+        <div id="availList" style="display:flex;flex-direction:column;gap:12px;margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB GESTION ============ -->
+  <section id="tab-gestion">
+    <div class="card" id="gestLock">
+      <h2>🔒 Espace gérant protégé</h2>
+      <p class="muted">Cet espace est réservé au gérant : commandes, paramètres, cartes et comptes livreurs. Entrez le mot de passe pour continuer.</p>
+      <input id="adminPass" type="password" placeholder="Mot de passe gérant" style="margin-top:14px" onkeydown="if(event.key==='Enter')tryAdmin()">
+      <button class="btn" onclick="tryAdmin()">🔓 Déverrouiller</button>
+      <p class="settings-note">Sécurité : 5 tentatives échouées = blocage 15 minutes. La session gérant est valable 24 h.</p>
+    </div>
+    <div id="gestContent">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div><h2 style="margin:0">📊 Tableau de bord</h2></div>
+          <button class="mini gray" onclick="lockAdmin()">🔒 Verrouiller</button>
+        </div>
+        <div class="statgrid" style="margin-top:12px">
+          <div class="stat o"><div class="n" id="stActive">0</div><div class="l">Courses actives</div></div>
+          <div class="stat g"><div class="n" id="stDone">0</div><div class="l">Livrées</div></div>
+          <div class="stat b"><div class="n" id="stRev">0</div><div class="l">Revenus (DZD)</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🏍️ Mes livreurs</h2>
+        <p class="muted">Chaque livreur a son compte (nom + code secret) pour se connecter sur SON téléphone, et voir seulement SES courses et SES gains.</p>
+        <div id="driversList" style="display:flex;flex-direction:column;gap:10px;margin-top:12px"></div>
+        <label>Ajouter un livreur</label>
+        <div class="row">
+          <div><small>Nom</small><input id="newDrvName" placeholder="Ex : Youcef"></div>
+          <div><small>Moto / véhicule</small><input id="newDrvMoto" placeholder="Ex : Yamaha FZ"></div>
+        </div>
+        <div class="row">
+          <div><small>Téléphone</small><input id="newDrvPhone" placeholder="0550 ..."></div>
+          <div><small>Code secret (4 chiffres)</small><input id="newDrvPin" inputmode="numeric" maxlength="4" placeholder="1234"></div>
+        </div>
+        <button class="btn" onclick="addDriver()">➕ Créer le compte livreur</button>
+        <p class="settings-note">💡 Ensuite, envoyez-lui le lien du site + son code. Il se connecte dans l'onglet <b>Livreur</b> de son téléphone.</p>
+      </div>
+
+      <div class="card">
+        <h2>⚙️ Personnalisation du compte</h2>
+        <p class="muted">Pour chaque client, vous changez le nom, la ville, le WhatsApp, les tarifs — c'est tout. Sauvegarde automatique.</p>
+        <div class="row">
+          <div>
+            <label>Nom de la plateforme</label>
+            <input id="setBrand" onchange="applySettings({brand:this.value||'DawDZ'})">
+          </div>
+          <div>
+            <label>Ville de la plateforme</label>
+            <select id="setCity" onchange="applySettings({city:this.value})"></select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label>Mot de passe gérant (8 caractères min.)</label>
+            <input id="setAdminPass" type="password" onchange="applySettings({adminPassword:this.value})">
+            <small class="muted" style="display:block;margin-top:4px">Laissez vide pour ne pas le changer. Un nouveau mot de passe remplace l'ancien immédiatement.</small>
+          </div>
+          <div>
+            <label>WhatsApp du gérant</label>
+            <input id="setWa" placeholder="0550 12 34 56" onchange="applySettings({waNumber:this.value})">
+          </div>
+        </div>
+        <label>Grille tarifaire (DZD)</label>
+        <div class="setgrid">
+          <div><label>Base</label><input type="number" id="setBase" onchange="applySettings({base:+this.value||300})"></div>
+          <div><label>+ par zone</label><input type="number" id="setStep" onchange="applySettings({step:+this.value||100})"></div>
+          <div><label>Colis moyen</label><input type="number" id="setMid" onchange="applySettings({mid:+this.value||0})"></div>
+          <div><label>Colis lourd</label><input type="number" id="setHeavy" onchange="applySettings({heavy:+this.value||0})"></div>
+          <div><label>Urgent ×</label><select id="setUrgent" onchange="applySettings({urgentMult:+this.value})">
+            <option value="1.3">×1,3</option><option value="1.5">×1,5</option><option value="2">×2</option>
+          </select></div>
+        </div>
+        <label>Zones de livraison actives</label>
+        <div class="chips" id="setZones"></div>
+        <div class="pricecard" id="priceChips"></div>
+        <label>🔔 Notifications automatiques</label>
+        <div class="row">
+          <div><small>Token WhatsApp Cloud API (Meta)</small><input id="setWaToken" placeholder="ex: EAAGxx..." onchange="applySettings({waToken:this.value})"></div>
+          <div><small>ID numéro WhatsApp Business</small><input id="setWaPhoneId" placeholder="ex: 123456789012345" onchange="applySettings({waPhoneId:this.value})"></div>
+        </div>
+        <div class="row">
+          <div><small>Token bot Telegram (gérant)</small><input id="setTgToken" placeholder="123456:ABC-DEF..." onchange="applySettings({tgToken:this.value})"></div>
+          <div><small>Chat ID Telegram (gérant)</small><input id="setTgChatId" placeholder="ex: 987654321" onchange="applySettings({tgChatId:this.value})"></div>
+        </div>
+        <div class="row" style="margin-top:16px">
+          <button class="btn sm" style="flex:1;background:var(--blue)" onclick="testTelegram()">📨 Tester Telegram</button>
+          <button class="btn sm" style="flex:1" onclick="testWa()">📲 Tester WhatsApp</button>
+          <button class="btn sm gray" style="background:#F2F4F7;color:var(--gray)" onclick="resetSettingsUI()">Réinit.</button>
+        </div>
+        <p class="settings-note">
+          📨 <b>Telegram</b> (gratuit, 2 minutes) : créez un bot avec <b>@BotFather</b>, envoyez-lui /start, collez le token + votre chat ID → chaque commande, acceptation et livraison arrive instantanément sur votre téléphone.
+          <br>📲 <b>WhatsApp Cloud API</b> (Meta, gratuit) : token + ID numéro → le client reçoit automatiquement la confirmation de sa commande.
+        </p>
+        <p class="settings-note">💡 Astuce de vente : ouvrez cette page face au client, tapez SON nom et SON numéro — en 30 secondes, le site est "à lui". C'est votre argument numéro 1.</p>
+      </div>
+
+      <div class="card">
+        <h2>🗺️ Zone de couverture</h2>
+        <p class="muted" id="covCityLabel">Carte interactive — zoome, explore les zones et les communes.</p>
+        <div id="covMap" style="margin-top:12px;border-radius:12px;overflow:hidden;border:1px solid var(--border)"></div>
+        <div class="chips" id="covLegend"></div>
+      </div>
+
+      <div class="card">
+        <h2>Toutes les commandes</h2>
+        <p class="muted">Cliquez sur une ligne pour le détail. 📲 = notifier le gérant sur WhatsApp.</p>
+        <div class="filters" id="filters"></div>
+        <div class="tblwrap">
+          <table>
+            <thead><tr><th>ID</th><th>Trajet</th><th>Client</th><th>Livreur</th><th>Tarif</th><th>Statut</th><th></th></tr></thead>
+            <tbody id="tblBody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer><span id="brandFooter">DawDZ</span> — Application créée par <b>Seghir Sofiane</b> © 2026<br>Données enregistrées sur cet appareil</footer>
+</div>
+
+<!-- Modale détail commande -->
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-card" id="modalCard"></div>
+</div>
+
+<nav class="tabbar">
+  <button class="tab active" id="nav-commande" onclick="showTab('commande')"><span>📦</span>Commander</button>
+  <button class="tab" id="nav-livreur" onclick="showTab('livreur')"><span>🏍️</span>Livreur</button>
+  <button class="tab" id="nav-gestion" onclick="showTab('gestion')"><span>📊</span>Gestion</button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+// ---------------- Données villes (cities.js) ----------------
+var ZONE_COLORS = {1:"#00A86B",2:"#2E6BE6",3:"#FF7A1A",4:"#8B5CF6"};
+var ZONE_POS = {1:[195,158],2:[170,58],3:[337,150],4:[107,242]};
+var ZONE_RECTS = [
+  {z:2,x:55,y:18,w:210,h:82},
+  {z:1,x:95,y:112,w:175,h:78},
+  {z:3,x:285,y:55,w:105,h:225},
+  {z:4,x:20,y:200,w:175,h:86}
+];
+function cityData(key){ return CITIES[key] || CITIES["tizi-ouzou"]; }
+function cityName(key){ return cityData(key).name; }
+function zoneOf(key, commune){
+  var c = cityData(key);
+  for(var i=0;i<c.zones.length;i++){ if(c.zones[i].c.indexOf(commune)>=0) return c.zones[i].z; }
+  return null;
+}
+function zoneLabel(key, z){
+  var c = cityData(key);
+  for(var i=0;i<c.zones.length;i++){ if(c.zones[i].z===z) return c.zones[i].label; }
+  return "Zone "+z;
+}
+function zonePoly(key, z){
+  var c = cityData(key);
+  for(var i=0;i<c.zones.length;i++){ if(c.zones[i].z===z) return c.zones[i].poly; }
+  return null;
+}
+var hasLeaflet = function(){ return typeof L !== "undefined"; };
+var covMapObj = null, covZoneLayer = null, covCommLayer = null, covMapInit = false, covMapCity = null;
+var drvMap = null, drvLayer = null, drvMapOrderId = null;
+var TYPES = {document:"📄 Document", colis:"📦 Colis", repas:"🍔 Repas", autre:"📎 Autre"};
+var WLABEL = {leger:"Léger (<1kg)", moyen:"Moyen (1-3kg)", lourd:"Lourd (>3kg)"};
+var STAT = {attente:"En attente", encours:"En cours", livree:"Livrée", annulee:"Annulée"};
+
+var DEFAULT_SETTINGS = {
+  brand:"DawDZ", waNumber:"", city:"tizi-ouzou",
+  base:300, step:100, mid:100, heavy:200, urgentMult:1.5,
+  zones:[true,true,true,true],
+  waToken:"", waPhoneId:"", tgToken:"", tgChatId:"",
+  adminPassword:"google.com12"
+};
+var settings = loadSettings();
+var counter = 1001;
+var orders = load() || seed();
+counter = nextCounter();
+var currentFilter = "tous";
+var formCity = settings.city;   // ville sélectionnée dans le formulaire
+
+// ---------------- Comptes & connexion ----------------
+var drivers = [];
+var currentDriver = null;
+var pendingDriverId = null;
+var adminToken = null;
+var adminUnlocked = false;
+try{
+  adminToken = sessionStorage.getItem("tz_admin_token");
+  adminUnlocked = !!adminToken;
+}catch(e){}
+try{ currentDriver = JSON.parse(localStorage.getItem("tz_driver") || "null"); }catch(e){ currentDriver = null; }
+function isAdminPath(p){
+  return p==="/api/settings" || p==="/api/drivers" || p.indexOf("/api/drivers/")===0 ||
+         p==="/api/send/telegram" || p==="/api/send/whatsapp";
+}
+
+function localDrivers(){
+  try{ var r = localStorage.getItem("tizidaw_drivers"); if(r) return JSON.parse(r); }catch(e){}
+  var d = [
+    {id:"d1", name:"Mehdaoui", moto:"Yamaha FZ", phone:"0661 23 45 67", pin:"9376"},
+    {id:"d2", name:"Riad", moto:"Suzuki GD 110", phone:"0550 87 65 43", pin:"3740"}
+  ];
+  try{ localStorage.setItem("tizidaw_drivers", JSON.stringify(d)); }catch(e){}
+  return d;
+}
+function saveLocalDrivers(){ try{ localStorage.setItem("tizidaw_drivers", JSON.stringify(drivers)); }catch(e){} }
+
+// ---------------- Couche API (backend) ----------------
+var USE_API = false;
+var KNOWN_IDS = {};
+var POLL_TIMER = null;
+function api(path, opts){
+  opts = opts || {};
+  var headers = Object.assign({}, opts.headers || {});
+  var prot = isAdminPath(path);
+  if(prot && adminToken) headers["X-Admin-Token"] = adminToken;
+  return fetch(path, Object.assign({}, opts, {headers:headers})).then(function(r){
+    if(prot && r.status===401){
+      // Session gérant expirée ou jeton invalide
+      adminToken = null; adminUnlocked = false;
+      try{ sessionStorage.removeItem("tz_admin_token"); }catch(e){}
+      if(typeof renderGestion === "function") renderGestion();
+      toast("⚠️ Session gérant expirée — reconnectez-vous");
+    }
+    return r.json().then(function(j){ if(!r.ok) throw new Error((j&&j.error) || ("Erreur HTTP "+r.status)); return j; });
+  });
+}
+function apiGet(path){ return api(path, {method:"GET"}); }
+function apiPost(path, body){
+  return api(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(body||{})});
+}
+function detectApi(){
+  return fetch("/api/health", {cache:"no-store"}).then(function(r){
+    USE_API = r.ok;
+    if(USE_API) toast("📡 Connecté au serveur — mode multi-appareils activé");
+  }).catch(function(){ USE_API = false; });
+}
+function pullState(){
+  if(!USE_API) return;
+  apiGet("/api/state").then(function(s){
+    var first = Object.keys(KNOWN_IDS).length===0;
+    var fresh = first ? [] : s.orders.filter(function(o){ return !KNOWN_IDS[o.id] && o.status!=="annulee"; });
+    fresh.forEach(function(o){
+      toast("🔔 NOUVELLE COMMANDE "+o.id+" ("+cityName(o.city)+") : "+o.from+" → "+o.to+" ("+fmt(o.fee)+" DZD)");
+      beep();
+    });
+    s.orders.forEach(function(o){ KNOWN_IDS[o.id]=o.status; });
+    orders = s.orders;
+    var keepPw = settings.adminPassword;   // le serveur masque le mot de passe : on garde le local
+    settings = Object.assign({}, s.settings);
+    if(keepPw) settings.adminPassword = keepPw;
+    if(Array.isArray(s.drivers)) drivers = s.drivers;
+    renderAll();
+  }).catch(function(){});
+}
+function beep(){
+  try{
+    var ctx = new (window.AudioContext||window.webkitAudioContext)();
+    var o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type="sine"; o.frequency.value=880; g.gain.value=0.12;
+    o.start();
+    o.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime+0.12);
+    o.stop(ctx.currentTime+0.25);
+  }catch(e){}
+}
+
+function loadSettings(){
+  try{ var r = localStorage.getItem("tizidaw_settings");
+    if(r){ var s = JSON.parse(r); return Object.assign({}, DEFAULT_SETTINGS, s); }
+  }catch(e){}
+  return Object.assign({}, DEFAULT_SETTINGS);
+}
+function saveSettings(){ localStorage.setItem("tizidaw_settings", JSON.stringify(settings)); }
+function load(){ try{ var r = localStorage.getItem("tizidaw_orders"); return r ? JSON.parse(r) : null; }catch(e){ return null; } }
+function save(){ localStorage.setItem("tizidaw_orders", JSON.stringify(orders)); }
+function nextCounter(){
+  var m = 1001;
+  orders.forEach(function(o){ var n = parseInt(String(o.id).replace(/\D/g,""),10); if(!isNaN(n) && n>=m) m = n+1; });
+  return m;
+}
+function mk(from, phone, name, to, type, weight, urgent, status, minAgo, cityKey){
+  return {
+    id:"TZ-"+(counter++), city:cityKey||formCity, from:from, to:to, type:type, weight:weight, urgent:urgent,
+    client:{name:name, phone:phone}, fee:calcFee(cityKey||formCity, from, to, weight, urgent),
+    status:status, driver:null, driverName:null, createdAt:Date.now()-(minAgo||1)*60000,
+    acceptedAt:null, deliveredAt:null
+  };
+}
+function seed(){
+  var s = [
+    mk("Azazga","0661 23 45 67","Nassima Aït Ahmed","Tizi Ouzou-Centre","colis","moyen",false,"attente",4,"tizi-ouzou"),
+    mk("Aït Châfaa","0550 87 65 43","Aïssa Meddah","Bougaâ","document","leger",false,"attente",9,"tizi-ouzou"),
+    mk("Alger-Centre","0555 44 33 22","Yacine Meziane","Rouiba","repas","leger",true,"livree",52,"alger")
+  ];
+  s[2].driver = "d1"; s[2].driverName = "Mehdaoui"; s[2].acceptedAt = Date.now()-45*60000; s[2].deliveredAt = Date.now()-20*60000;
+  save();
+  return s;
+}
+function calcFee(cityKey, from, to, weight, urgent){
+  var c = cityData(cityKey);
+  var z1 = 1, z2 = 1;
+  c.zones.forEach(function(zz){
+    zz.c.forEach(function(comm){ if(comm===from) z1 = zz.z; if(comm===to) z2 = zz.z; });
+  });
+  var f = settings.base + settings.step*Math.abs(z1-z2);
+  f += (weight==="moyen"?settings.mid : weight==="lourd"?settings.heavy : 0);
+  if(urgent) f = Math.round(f*settings.urgentMult/10)*10;
+  return f;
+}
+
+// ---------------- Utilitaires ----------------
+function fmt(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g," "); }
+function timeAgo(ts){
+  if(!ts) return "";
+  var m = Math.floor((Date.now()-ts)/60000);
+  if(m<1) return "à l'instant";
+  if(m<60) return "il y a "+m+" min";
+  var h = Math.floor(m/60);
+  if(h<24) return "il y a "+h+" h";
+  return "hier";
+}
+function driverName(id){ var d = drivers.find(function(x){return x.id===id;}); return d ? d.name : null; }
+function dispDriver(o){
+  if(o.driverName) return o.driverName;
+  var n = driverName(o.driver);
+  return n || (o.driver || "—");
+}
+function badge(st){ return '<span class="badge st-'+st+'">'+STAT[st]+'</span>'; }
+var toastTimer;
+function toast(msg){
+  var t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ t.classList.remove("show"); }, 3400);
+}
+function waNumber(num){
+  var d = String(num||"").replace(/\D/g,"");
+  if(!d) return null;
+  if(d.length===10 && d.charAt(0)==="0") d = "213"+d.slice(1);
+  else if(d.charAt(0)==="0") d = d.replace(/^0+/,"");
+  return d;
+}
+function openWa(number, text){
+  var n = waNumber(number);
+  if(!n){ toast("⚠️ Numéro WhatsApp invalide ou manquant."); return; }
+  window.open("https://wa.me/"+n+"?text="+encodeURIComponent(text), "_blank");
+}
+function clientWaMsg(o){
+  return "✅ *Commande "+o.id+" confirmée* — "+settings.brand+"\n"+TYPES[o.type]+" · "+WLABEL[o.weight]+(o.urgent?" · ⚡ Urgent":"")+"\n🏙️ "+cityName(o.city)+"\n📍 Départ : "+o.from+"\n🏁 Arrivée : "+o.to+"\n💰 Tarif : "+fmt(o.fee)+" DZD (paiement à la livraison)\nUn livreur moto part vers vous très vite !";
+}
+function merchantWaMsg(o){
+  return "🔔 *NOUVELLE COMMANDE* — "+settings.brand+"\nID : "+o.id+"\n🏙️ "+cityName(o.city)+"\n👤 "+o.client.name+" · "+o.client.phone+"\n📍 "+o.from+" → "+o.to+"\n"+TYPES[o.type]+" · "+WLABEL[o.weight]+(o.urgent?" · ⚡ Urgent":"")+"\n💰 "+fmt(o.fee)+" DZD";
+}
+function driverWaMsg(o){
+  return "Bonjour "+o.client.name+", c'est votre livreur "+dispDriver(o)+" de "+settings.brand+" 🏍️. Je récupère la commande "+o.id+" ("+o.from+" → "+o.to+"), je suis en route !";
+}
+
+// ---------------- Onglets ----------------
+function showTab(name){
+  ["commande","livreur","gestion"].forEach(function(n){
+    document.getElementById("tab-"+n).classList.toggle("active", n===name);
+    document.getElementById("nav-"+n).classList.toggle("active", n===name);
+  });
+  window.scrollTo(0,0);
+  if(hasLeaflet()){
+    if(name==="gestion" && covMapObj) setTimeout(function(){ covMapObj.invalidateSize(); }, 60);
+    if(name==="livreur" && drvMap) setTimeout(function(){ drvMap.invalidateSize(); }, 60);
+  }
+}
+
+// ---------------- Formulaire ----------------
+var selType = "colis", selWeight = "leger";
+function pickType(b){ selType=b.dataset.v; mark(b,"segType"); updateEstimate(); }
+function pickWeight(b){ selWeight=b.dataset.v; mark(b,"segWeight"); updateEstimate(); }
+function mark(b,segId){
+  document.querySelectorAll("#"+segId+" button").forEach(function(x){x.classList.remove("sel");});
+  b.classList.add("sel");
+}
+function fillCitySelect(){
+  var sel = document.getElementById("fCity");
+  sel.innerHTML = Object.keys(CITIES).map(function(k){
+    return "<option value=\""+k+"\""+(k===formCity?" selected":"")+">🏙️ "+CITIES[k].name+"</option>";
+  }).join("");
+}
+function changeFormCity(){
+  formCity = document.getElementById("fCity").value;
+  refreshZoneSelects();
+  updateEstimate();
+}
+function fillZones(){
+  var c = cityData(formCity);
+  ["fFrom","fTo"].forEach(function(id){
+    var sel = document.getElementById(id);
+    var html = '<option value="">— Choisir —</option>';
+    c.zones.forEach(function(z){
+      if(!settings.zones[z.z-1]) return;
+      html += '<optgroup label="'+z.label+'">' + z.c.map(function(k){return "<option>"+k+"</option>";}).join("") + "</optgroup>";
+    });
+    sel.innerHTML = html;
+  });
+}
+function refreshZoneSelects(){
+  var c = cityData(formCity);
+  var known = {};
+  c.zones.forEach(function(z){ z.c.forEach(function(k){ known[k]=z.z; }); });
+  ["fFrom","fTo"].forEach(function(id){
+    var sel = document.getElementById(id);
+    var v = sel.value;
+    fillZones();
+    if(v && known[v] && !settings.zones[known[v]-1]) sel.value = "";
+    else sel.value = v;
+  });
+}
+function updateEstimate(){
+  var from = document.getElementById("fFrom").value;
+  var to = document.getElementById("fTo").value;
+  var urg = document.getElementById("fUrgent").checked;
+  var el = document.getElementById("feeEst");
+  el.textContent = (from && to) ? (fmt(calcFee(formCity, from, to, selWeight, urg)) + " DZD") : "—";
+}
+function createOrder(e){
+  if(e && e.preventDefault) e.preventDefault();
+  var name = document.getElementById("fName").value.trim();
+  var phone = document.getElementById("fPhone").value.trim();
+  var from = document.getElementById("fFrom").value;
+  var to = document.getElementById("fTo").value;
+  if(!name || !phone || !from || !to){ toast("⚠️ Remplissez tous les champs (nom, téléphone, départ, arrivée)"); return false; }
+  var urgent = document.getElementById("fUrgent").checked;
+  var resetForm = function(){
+    document.getElementById("fName").value=""; document.getElementById("fPhone").value="";
+    document.getElementById("fUrgent").checked=false;
+  };
+  if(USE_API){
+    apiPost("/api/orders", {city:formCity, from:from, to:to, type:selType, weight:selWeight, urgent:urgent, client:{name:name, phone:phone}})
+      .then(function(o){
+        orders.push(o); KNOWN_IDS[o.id] = o.status;
+        toast("✅ Commande " + o.id + " (" + cityName(o.city) + ") créée — " + fmt(o.fee) + " DZD.");
+        resetForm(); renderAll();
+      })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+    return false;
+  }
+  var o = mk(from, phone, name, to, selType, selWeight, urgent, "attente", 0, formCity);
+  orders.push(o); save(); KNOWN_IDS[o.id] = o.status;
+  toast("✅ Commande " + o.id + " créée — " + fmt(o.fee) + " DZD. Un livreur va l'accepter.");
+  resetForm(); renderAll();
+  return false;
+}
+
+// ---------------- Connexion livreur ----------------
+function renderDriverLogin(){
+  var list = document.getElementById("driverLoginList");
+  if(!list) return;
+  list.innerHTML = drivers.map(function(d){
+    return '<div class="driver" onclick="pickDriver(\''+d.id+'\')">' +
+      '<div class="avatar">'+d.name[0]+'</div>' +
+      '<div style="flex:1"><b>'+d.name+'</b><br><small class="muted">'+(d.moto||"")+'</small></div>' +
+      '<span class="badge st-encours">Se connecter</span></div>';
+  }).join("") || '<div class="empty">Aucun compte livreur — créez-les dans l\'espace Gestion.</div>';
+}
+function pickDriver(id){
+  var d = drivers.find(function(x){return x.id===id;});
+  if(!d) return;
+  pendingDriverId = id;
+  document.getElementById("pinDriverName").textContent = d.name;
+  document.getElementById("pinInput").value = "";
+  document.getElementById("pinBox").style.display = "block";
+  document.getElementById("pinInput").focus();
+}
+function cancelLogin(){
+  document.getElementById("pinBox").style.display = "none";
+  pendingDriverId = null;
+}
+function doLogin(){
+  var pin = document.getElementById("pinInput").value.trim();
+  if(!pin){ toast("⚠️ Entrez votre code secret (4 chiffres)"); return; }
+  var d = drivers.find(function(x){return x.id===pendingDriverId;});
+  if(!d) return;
+  if(USE_API){
+    apiPost("/api/drivers/login", {id:d.id, pin:pin})
+      .then(function(r){ loginSuccess(r.driver); })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+  } else {
+    if(String(d.pin)===pin) loginSuccess(d);
+    else toast("⚠️ Code incorrect");
+  }
+}
+function loginSuccess(d){
+  currentDriver = {id:d.id, name:d.name, moto:d.moto};
+  try{ localStorage.setItem("tz_driver", JSON.stringify(currentDriver)); }catch(e){}
+  cancelLogin();
+  renderLivreur();
+  toast("✅ Bonjour " + d.name + " — bonne route ! 🏍️");
+}
+function logoutDriver(){
+  currentDriver = null;
+  try{ localStorage.removeItem("tz_driver"); }catch(e){}
+  renderLivreur();
+  toast("👋 Déconnecté");
+}
+
+// ---------------- Actions commandes ----------------
+function applyOrder(o){
+  var i = orders.findIndex(function(x){return x.id===o.id;});
+  if(i>=0) orders[i]=o; else orders.push(o);
+  KNOWN_IDS[o.id] = o.status;
+}
+function acceptOrder(id){
+  var o = orders.find(function(x){return x.id===id;});
+  if(!o || o.status!=="attente") return;
+  if(!currentDriver){ toast("⚠️ Connectez-vous avec votre compte livreur d'abord"); return; }
+  if(USE_API){
+    apiPost("/api/orders/"+id+"/accept", {driver:currentDriver.id, driverName:currentDriver.name})
+      .then(function(oo){ applyOrder(oo); toast("🏍️ Vous avez accepté la course " + oo.id + ". C'est parti !"); renderAll(); })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+    return;
+  }
+  o.status="encours"; o.driver=currentDriver.id; o.driverName=currentDriver.name; o.acceptedAt=Date.now(); save();
+  toast("🏍️ Vous avez accepté la course " + o.id + ". C'est parti !");
+  renderAll();
+}
+function deliverOrder(id){
+  var o = orders.find(function(x){return x.id===id;});
+  if(!o || o.status!=="encours") return;
+  if(USE_API){
+    apiPost("/api/orders/"+id+"/deliver")
+      .then(function(oo){ applyOrder(oo); toast("🎉 Livraison " + oo.id + " confirmée ! +" + fmt(oo.fee) + " DZD pour " + dispDriver(oo)); renderAll(); })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+    return;
+  }
+  o.status="livree"; o.deliveredAt=Date.now(); save();
+  toast("🎉 Livraison " + o.id + " confirmée ! +" + fmt(o.fee) + " DZD pour " + dispDriver(o));
+  renderAll();
+}
+function cancelOrder(id){
+  var o = orders.find(function(x){return x.id===id;});
+  if(!o) return;
+  if(USE_API){
+    apiPost("/api/orders/"+id+"/cancel")
+      .then(function(oo){ applyOrder(oo); toast("Commande " + oo.id + " annulée."); renderAll(); })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+    return;
+  }
+  o.status="annulee"; save();
+  toast("Commande " + o.id + " annulée.");
+  renderAll();
+}
+function clientWaOrder(id){ var o=orders.find(function(x){return x.id===id;}); if(o) openWa(o.client.phone, clientWaMsg(o)); }
+function notifyOrder(id){
+  if(!waNumber(settings.waNumber)){ toast("⚠️ Configurez d'abord le WhatsApp du gérant dans Paramètres."); return; }
+  var o = orders.find(function(x){return x.id===id;});
+  if(o) openWa(settings.waNumber, merchantWaMsg(o));
+}
+function driverWaOrder(id){ var o=orders.find(function(x){return x.id===id;}); if(o) openWa(o.client.phone, driverWaMsg(o)); }
+
+// ---------------- Carte SVG (repli hors-ligne) ----------------
+function mapSVG(cityKey, route){
+  var c = cityData(cityKey);
+  var s = '<svg viewBox="0 0 400 300" style="width:100%;display:block;border-radius:12px;background:#F8FAFB;border:1px solid #E4E7EC">';
+  s += '<path d="M0 172 C 90 150, 160 188, 250 172 S 380 148, 400 158" stroke="#D6E8FA" stroke-width="13" fill="none"/>';
+  ZONE_RECTS.forEach(function(r){
+    var on = settings.zones[r.z-1];
+    s += '<rect x="'+r.x+'" y="'+r.y+'" width="'+r.w+'" height="'+r.h+'" rx="14" fill="'+ZONE_COLORS[r.z]+'" fill-opacity="'+(on?0.13:0.03)+'" stroke="'+ZONE_COLORS[r.z]+'" stroke-opacity="'+(on?0.5:0.15)+'" stroke-width="1.5" stroke-dasharray="'+(on?'':'5 4')+'"/>';
+    s += '<text x="'+(r.x+r.w/2)+'" y="'+(r.y+16)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+ZONE_COLORS[r.z]+'" fill-opacity="'+(on?1:0.35)+'">'+zoneLabel(cityKey, r.z)+'</text>';
+  });
+  var shown = {};
+  c.zones.forEach(function(z){ z.c.forEach(function(k){ if(shown[k]) return; shown[k]=true; var p = c.comm[k]; if(!p) return;
+    s += '<circle cx="'+p[1]+'" cy="'+p[2]+'" r="2.6" fill="#98A2B3"/>';
+  });});
+  if(route){
+    var p1 = ZONE_POS[route[0]], p2 = ZONE_POS[route[1]];
+    var mx=(p1[0]+p2[0])/2, my=(p1[1]+p2[1])/2;
+    var dx=p2[0]-p1[0], dy=p2[1]-p1[1];
+    var len=Math.sqrt(dx*dx+dy*dy)||1;
+    var cx=mx-dy/len*28, cy=my+dx/len*28;
+    s += '<path d="M'+p1[0]+' '+p1[1]+' Q'+cx+' '+cy+' '+p2[0]+' '+p2[1]+'" stroke="#00A86B" stroke-width="3" fill="none" stroke-dasharray="7 5" stroke-linecap="round"/>';
+    s += '<circle cx="'+p1[0]+'" cy="'+p1[1]+'" r="9" fill="#FF7A1A" stroke="#fff" stroke-width="2.5"/>';
+    s += '<text x="'+p1[0]+'" y="'+(p1[1]+3.5)+'" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">D</text>';
+    s += '<circle cx="'+p2[0]+'" cy="'+p2[1]+'" r="9" fill="#00A86B" stroke="#fff" stroke-width="2.5"/>';
+    s += '<text x="'+p2[0]+'" y="'+(p2[1]+3.5)+'" text-anchor="middle" font-size="9" font-weight="800" fill="#fff">A</text>';
+  }
+  s += '</svg>';
+  return s;
+}
+
+// ---------------- Carte Leaflet (OpenStreetMap) ----------------
+function initCovMap(){
+  var el = document.getElementById("covMap");
+  var key = settings.city;
+  var c = cityData(key);
+  document.getElementById("covCityLabel").textContent = "🏙️ " + c.name + " — carte interactive, zoomez et explorez les zones de livraison.";
+  if(!hasLeaflet()){
+    el.style.height = "auto";
+    el.innerHTML = mapSVG(key, null);
+    return;
+  }
+  el.style.height = "400px";
+  var changed = (covMapInit && covMapCity!==key);
+  if(!covMapInit || changed){
+    if(covMapObj){ covMapObj.remove(); covMapObj = null; }
+    covMapInit = true; covMapCity = key;
+    el.innerHTML = "";
+    covMapObj = L.map(el, {scrollWheelZoom:false}).setView(c.center, 11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(covMapObj);
+    covCommLayer = L.layerGroup().addTo(covMapObj);
+    Object.keys(c.comm).forEach(function(k){
+      L.circleMarker(c.comm[k],{radius:5,color:"#374151",weight:1.5,fillColor:"#fff",fillOpacity:1})
+        .bindTooltip(k,{direction:"top"}).addTo(covCommLayer);
+    });
+    covZoneLayer = L.layerGroup().addTo(covMapObj);
+    covMapObj.fitBounds(c.bounds);
+  }
+  covZoneLayer.clearLayers();
+  c.zones.forEach(function(z){
+    var on = settings.zones[z.z-1];
+    L.polygon(z.poly,{color:ZONE_COLORS[z.z],weight:2,opacity:on?0.9:0.25,
+      fillColor:ZONE_COLORS[z.z],fillOpacity:on?0.15:0.03,dashArray:on?null:"6 6"})
+      .bindTooltip(z.label + (on?"":" (désactivée)"),{sticky:true}).addTo(covZoneLayer);
+  });
+}
+function initDrvMap(o){
+  if(!hasLeaflet()) return;
+  var c = cityData(o.city);
+  var from = c.comm[o.from], to = c.comm[o.to];
+  var el = document.getElementById("drvMap");
+  if(!from || !to || !el) return;
+  if(!drvMap || drvMapOrderId!==o.id){
+    el.innerHTML = "";
+    drvMap = L.map(el,{scrollWheelZoom:false}).setView(c.center,11);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:18,attribution:'&copy; OpenStreetMap'}).addTo(drvMap);
+    drvLayer = L.layerGroup().addTo(drvMap);
+    drvMapOrderId = o.id;
+  }
+  if(drvLayer) drvLayer.clearLayers();
+  var iconD = L.divIcon({className:"",html:'<div style="width:28px;height:28px;border-radius:50%;background:#FF7A1A;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)">D</div>',iconSize:[28,28],iconAnchor:[14,14]});
+  var iconA = L.divIcon({className:"",html:'<div style="width:28px;height:28px;border-radius:50%;background:#00A86B;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35)">A</div>',iconSize:[28,28],iconAnchor:[14,14]});
+  L.polyline([from,to],{color:"#00A86B",weight:4,dashArray:"10 8",opacity:0.9})
+    .bindTooltip("Trajet estimé").addTo(drvLayer);
+  L.marker(from,{icon:iconD}).bindTooltip(o.from+" (départ)").addTo(drvLayer);
+  L.marker(to,{icon:iconA}).bindTooltip(o.to+" (arrivée)").addTo(drvLayer);
+  drvMap.fitBounds(L.latLngBounds([from,to]).pad(0.35));
+}
+
+// ---------------- Rendu ----------------
+function orderCard(o, withActions){
+  var h = '<div class="ocard">';
+  h += '<div class="meta">'+o.id+' · 🏙️ '+cityName(o.city)+' · '+(o.urgent?"⚡ Urgent · ":"")+TYPES[o.type]+' · '+timeAgo(o.createdAt)+'</div>';
+  h += '<div class="route">'+o.from+'<span class="arr">→</span>'+o.to+'</div>';
+  h += '<div class="meta">👤 '+o.client.name+' · 📞 '+o.client.phone+'</div>';
+  h += '<div class="fee">'+fmt(o.fee)+' DZD</div>';
+  if(withActions && o.status==="attente"){
+    h += '<button class="btn sm" onclick="acceptOrder(\''+o.id+'\')">🏍️ Accepter la course</button> ';
+    h += '<button class="mini green" onclick="driverWaOrder(\''+o.id+'\')">📲 Client</button>';
+  }
+  h += '</div>';
+  return h;
+}
+
+function renderCommande(){
+  var el = document.getElementById("myOrders");
+  var mine = orders.slice().sort(function(a,b){return b.createdAt-a.createdAt;}).slice(0,4);
+  if(!mine.length){ el.innerHTML = '<div class="empty">Aucune commande pour le moment.</div>'; return; }
+  el.innerHTML = mine.map(function(o){
+    var act = o.status==="attente" ? '<button class="mini red" onclick="event.stopPropagation();cancelOrder(\''+o.id+'\')">Annuler</button>' : '';
+    return '<div class="ord"><div><b>'+o.id+'</b> · '+o.from+' → '+o.to+'<br><small class="muted">🏙️ '+cityName(o.city)+' · '+TYPES[o.type]+' · '+fmt(o.fee)+' DZD</small></div>' +
+      '<div style="display:flex;gap:6px;align-items:center;flex:none">'+badge(o.status)+
+      '<button class="mini green" onclick="clientWaOrder(\''+o.id+'\')" title="Confirmer sur WhatsApp">📲</button>'+act+'</div></div>';
+  }).join("");
+}
+
+function renderLivreur(){
+  var loginCard = document.getElementById("driverLoginCard");
+  var dash = document.getElementById("driverDash");
+  var wrap = document.getElementById("drvMapWrap");
+
+  if(!currentDriver){
+    loginCard.style.display = "block";
+    dash.style.display = "none";
+    wrap.style.display = "none";
+    drvMapOrderId = null;
+    renderDriverLogin();
+    return;
+  }
+  loginCard.style.display = "none";
+  dash.style.display = "block";
+  document.getElementById("driverBanner").innerHTML =
+    '<div class="driver sel" style="cursor:default">' +
+    '<div class="avatar">'+currentDriver.name[0]+'</div>' +
+    '<div style="flex:1"><b>🏍️ '+currentDriver.name+'</b><br><small class="muted">'+(currentDriver.moto||"")+' · Connecté</small></div>' +
+    '<button class="mini gray" onclick="logoutDriver()">Se déconnecter</button></div>';
+
+  var myId = currentDriver.id;
+  var mine = orders.filter(function(o){return o.driver===myId && o.status==="encours";});
+  var done = orders.filter(function(o){return o.driver===myId && o.status==="livree";});
+  var earnings = done.reduce(function(s,o){return s+o.fee;},0);
+
+  var ac = document.getElementById("activeCard");
+  if(mine.length){
+    var o = mine[0];
+    var c = cityData(o.city);
+    var useLeaflet = hasLeaflet() && !!c.comm[o.from] && !!c.comm[o.to];
+    ac.innerHTML = '<h2>📍 Course en cours — '+cityName(o.city)+'</h2>' +
+      '<div class="meta" style="margin-top:4px">'+o.id+' · '+(o.urgent?"⚡ Urgent":"Standard")+' · acceptée '+timeAgo(o.acceptedAt)+'</div>' +
+      (useLeaflet
+        ? '<p class="muted" style="margin-top:10px">🗺️ Voir le trajet sur la carte interactive ci-dessous</p>'
+        : '<div style="margin-top:12px">'+mapSVG(o.city,[zoneOf(o.city,o.from)||1, zoneOf(o.city,o.to)||1])+'</div>' +
+          '<div style="display:flex;gap:14px;font-size:11px;color:var(--gray);margin-top:6px"><span>🟠 D = départ</span><span>🟢 A = arrivée</span></div>') +
+      '<div class="ocard active-order" style="margin-top:12px">' +
+      '<div class="route" style="font-weight:800">'+o.from+' <span style="color:#FFD166">→</span> '+o.to+'</div>' +
+      '<div class="meta">👤 '+o.client.name+'<br>📞 '+o.client.phone+'</div>' +
+      '<div class="fee">À encaisser : '+fmt(o.fee)+' DZD</div>' +
+      '<a class="btn sm blue" style="margin:0 8px 12px 0" href="tel:'+o.client.phone.replace(/\s/g,'')+'" target="_blank">📞 Appeler</a>' +
+      '<button class="btn sm" style="background:#fff;color:var(--green-d);margin:0 0 12px 0" onclick="driverWaOrder(\''+o.id+'\')">📲 WhatsApp</button>' +
+      '<button class="btn gold" onclick="deliverOrder(\''+o.id+'\')">✅ Marquer comme livrée</button>' +
+      '</div>';
+    if(useLeaflet){ wrap.style.display="block"; initDrvMap(o); }
+    else { wrap.style.display="none"; drvMapOrderId=null; }
+  } else {
+    ac.innerHTML = '<h2>️ Aucune course en cours</h2>' +
+      '<p class="muted" style="margin-top:6px">Acceptez une course dans la liste ci-dessous pour démarrer. Votre trajet apparaîtra sur la carte de la zone.</p>';
+    wrap.style.display="none";
+    drvMapOrderId=null;
+  }
+
+  document.getElementById("driverStats").innerHTML =
+    '<div class="stat"><div class="n">'+mine.length+'</div><div class="l">En cours</div></div>' +
+    '<div class="stat g"><div class="n">'+done.length+'</div><div class="l">Livrées</div></div>' +
+    '<div class="stat o"><div class="n">'+fmt(earnings)+'</div><div class="l">Gains (DZD)</div></div>';
+
+  var hist = done.slice().sort(function(a,b){return (b.deliveredAt||0)-(a.deliveredAt||0);}).slice(0,3);
+  document.getElementById("driverHist").innerHTML = hist.length
+    ? hist.map(function(o){
+        return '<div class="ord" style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px">' +
+          '<div><b>'+o.id+'</b> · '+o.from+' → '+o.to+'<br><small class="muted">🏙️ '+cityName(o.city)+'</small></div>' +
+          '<div class="muted">'+fmt(o.fee)+' DZD · '+timeAgo(o.deliveredAt)+'</div></div>';
+      }).join("")
+    : '<div class="empty" style="padding:14px 0">Aucune livraison terminée pour le moment.</div>';
+
+  var avail = orders.filter(function(o){return o.status==="attente";})
+    .sort(function(a,b){return b.fee-a.fee;});
+  document.getElementById("availList").innerHTML = avail.length
+    ? avail.map(function(o){ return orderCard(o,true); }).join("")
+    : '<div class="empty">Aucune course disponible. Revenez dans un instant. 🍃</div>';
+}
+
+function renderDrivers(){
+  var el = document.getElementById("driversList");
+  if(!el) return;
+  el.innerHTML = drivers.map(function(d){
+    var done = orders.filter(function(o){return o.driver===d.id && o.status==="livree";});
+    var earn = done.reduce(function(s,o){return s+o.fee;},0);
+    return '<div class="driver" style="cursor:default">' +
+      '<div class="avatar">'+d.name[0]+'</div>' +
+      '<div style="flex:1"><b>'+d.name+'</b><br><small class="muted">'+(d.moto||"")+(d.phone?" · "+d.phone:"")+'</small></div>' +
+      '<div style="text-align:right"><small class="muted">'+done.length+' livr. · '+fmt(earn)+' DZD</small><br>' +
+      '<button class="mini red" onclick="deleteDriver(\''+d.id+'\')">✕ Retirer</button></div></div>';
+  }).join("") || '<div class="empty">Aucun livreur pour le moment.</div>';
+}
+function addDriver(){
+  var name = document.getElementById("newDrvName").value.trim();
+  var moto = document.getElementById("newDrvMoto").value.trim();
+  var phone = document.getElementById("newDrvPhone").value.trim();
+  var pin = document.getElementById("newDrvPin").value.trim();
+  if(!name || !pin){ toast("⚠️ Nom et code secret obligatoires"); return; }
+  var finish = function(d){
+    drivers.push(d);
+    if(!USE_API) saveLocalDrivers();
+    renderDrivers();
+    ["newDrvName","newDrvMoto","newDrvPhone","newDrvPin"].forEach(function(id){ document.getElementById(id).value=""; });
+    toast("✅ Compte " + d.name + " créé — code : " + pin + ". Envoyez-lui le lien + son code !");
+  };
+  if(USE_API){
+    apiPost("/api/drivers", {name:name, moto:moto, phone:phone, pin:pin})
+      .then(function(r){ finish(r.driver); })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+  } else {
+    finish({id:"d"+String(Date.now()).slice(-6), name:name, moto:moto, phone:phone, pin:pin});
+  }
+}
+function deleteDriver(id){
+  var d = drivers.find(function(x){return x.id===id;});
+  if(!d) return;
+  if(!confirm("Retirer le compte de " + d.name + " ?")) return;
+  var finish = function(){
+    drivers = drivers.filter(function(x){return x.id!==id;});
+    if(!USE_API) saveLocalDrivers();
+    if(currentDriver && currentDriver.id===id){
+      currentDriver = null;
+      try{ localStorage.removeItem("tz_driver"); }catch(e){}
+    }
+    renderDrivers(); renderLivreur();
+    toast("Compte " + d.name + " retiré.");
+  };
+  if(USE_API){
+    apiPost("/api/drivers/"+id+"/delete").then(function(){ finish(); }).catch(function(err){ toast("⚠️ " + err.message); });
+  } else {
+    finish();
+  }
+}
+
+// ---------------- Gérant (mot de passe) ----------------
+function tryAdmin(){
+  var p = document.getElementById("adminPass").value;
+  if(!p){ toast("⚠️ Entrez le mot de passe gérant"); return; }
+  if(USE_API){
+    apiPost("/api/admin", {password:p})
+      .then(function(r){ unlockAdmin(r.token); })
+      .catch(function(e){ toast("⚠️ " + e.message); });
+  } else {
+    if(p === settings.adminPassword) unlockAdmin(null);
+    else toast("⚠️ Mot de passe incorrect");
+  }
+}
+function unlockAdmin(token){
+  if(token){
+    adminToken = token;
+    try{ sessionStorage.setItem("tz_admin_token", token); }catch(e){}
+  }
+  adminUnlocked = true;
+  document.getElementById("adminPass").value = "";
+  renderGestion();
+  toast("✅ Espace gérant déverrouillé (session 24 h)");
+}
+function lockAdmin(){
+  adminUnlocked = false;
+  adminToken = null;
+  try{ sessionStorage.removeItem("tz_admin_token"); }catch(e){}
+  renderGestion();
+  toast("🔒 Espace gérant verrouillé");
+}
+
+// ---------------- Gestion ----------------
+function setFilter(f){ currentFilter=f; renderGestion(); }
+function renderGestion(){
+  document.getElementById("gestLock").style.display = adminUnlocked ? "none" : "block";
+  document.getElementById("gestContent").style.display = adminUnlocked ? "block" : "none";
+  if(!adminUnlocked) return;
+
+  var active = orders.filter(function(o){return o.status==="attente"||o.status==="encours";}).length;
+  var done = orders.filter(function(o){return o.status==="livree";});
+  var rev = done.reduce(function(s,o){return s+o.fee;},0);
+  document.getElementById("stActive").textContent = active;
+  document.getElementById("stDone").textContent = done.length;
+  document.getElementById("stRev").textContent = fmt(rev);
+
+  renderDrivers();
+
+  initCovMap();
+  document.getElementById("covLegend").innerHTML = cityData(settings.city).zones.map(function(z){
+    var on = settings.zones[z.z-1];
+    return '<span class="chip" style="cursor:default"><span class="dot" style="background:'+ZONE_COLORS[z.z]+'"></span>'+z.label+(on?" ✓":" (désactivée)")+'</span>';
+  }).join("");
+
+  var filters = ["tous","attente","encours","livree","annulee"];
+  document.getElementById("filters").innerHTML = filters.map(function(f){
+    var lbl = f==="tous"?"Tous":STAT[f];
+    return '<button class="'+(f===currentFilter?"sel":"")+'" onclick="setFilter(\''+f+'\')">'+lbl+'</button>';
+  }).join("");
+
+  var list = orders.slice().sort(function(a,b){return b.createdAt-a.createdAt;})
+    .filter(function(o){return currentFilter==="tous"||o.status===currentFilter;});
+  document.getElementById("tblBody").innerHTML = list.map(function(o){
+    return "<tr onclick=\"openOrder('" + o.id + "')\">" +
+      "<td><b>" + o.id + "</b><br><small class='muted'>" + timeAgo(o.createdAt) + "</small></td>" +
+      "<td class='route'><b>" + o.from + "</b> → " + o.to + "<br><small class='muted'>🏙️ " + cityName(o.city) + "</small></td>" +
+      "<td>" + o.client.name + "<br><small class='muted'>" + o.client.phone + "</small></td>" +
+      "<td>" + (o.driver?dispDriver(o):"—") + "</td>" +
+      "<td><b>" + fmt(o.fee) + "</b></td>" +
+      "<td>" + badge(o.status) + "</td>" +
+      "<td style='white-space:nowrap'>" +
+        (o.status==="attente" ? "<button class='mini red' onclick=\"event.stopPropagation();cancelOrder('" + o.id + "')\">✕</button> " : "") +
+        "<button class='mini green' onclick=\"event.stopPropagation();notifyOrder('" + o.id + "')\" title='Notifier le gérant'>📲</button>" +
+      "</td></tr>";
+  }).join("") || '<tr><td colspan="7" class="empty">Rien à afficher.</td></tr>';
+}
+
+// ---------------- Modale ----------------
+function openOrder(id){
+  var o = orders.find(function(x){return x.id===id;});
+  if(!o) return;
+  var tl = '<div class="tl-item"><b>🕐 Commande créée</b><span>'+timeAgo(o.createdAt)+'</span></div>';
+  if(o.acceptedAt) tl += '<div class="tl-item"><b>🏍️ Acceptée par '+dispDriver(o)+'</b><span>'+timeAgo(o.acceptedAt)+'</span></div>';
+  if(o.deliveredAt) tl += '<div class="tl-item"><b>🎉 Livrée</b><span>'+timeAgo(o.deliveredAt)+'</span></div>';
+  if(o.status==="annulee") tl += '<div class="tl-item"><b>❌ Commande annulée</b></div>';
+  if(o.status==="attente") tl += '<div class="tl-item" style="opacity:.5"><b>🏍️ En attente d\'un livreur…</b></div>';
+
+  var actions = "";
+  if(o.status==="attente") actions += "<button class='btn sm red' style='background:#FEE2E2;color:#B91C1C;margin-top:16px' onclick=\"closeModal();cancelOrder('" + o.id + "')\">Annuler la commande</button>";
+  if(o.status!=="annulee") actions += "<button class='btn sm green' style='background:#E8F8F1;color:#047857;margin-top:8px' onclick=\"clientWaOrder('" + o.id + "')\">📲 Envoyer la confirmation au client</button>";
+
+  document.getElementById("modalCard").innerHTML =
+    '<div class="modal-head"><div><b style="font-size:18px">'+o.id+'</b> '+badge(o.status)+'</div>' +
+    '<button class="mini gray" onclick="closeModal()">✕ Fermer</button></div>' +
+    '<div class="feebox" style="margin:0"><div><div class="lbl">Tarif</div><div class="muted" style="color:rgba(255,255,255,.6);font-size:12px">Paiement à la livraison</div></div>' +
+    '<div class="val">'+fmt(o.fee)+' DZD</div></div>' +
+    '<div class="route" style="font-weight:800;font-size:16px;margin-top:14px">📍 '+o.from+' <span style="color:var(--green)">→</span> 🏁 '+o.to+'</div>' +
+    '<p class="muted" style="margin-top:8px">🏙️ '+cityName(o.city)+' · 👤 '+o.client.name+' · 📞 '+o.client.phone+'</p>' +
+    '<div class="pricecard" style="margin-top:12px"><span>'+TYPES[o.type]+'</span><span>'+WLABEL[o.weight]+'</span>'+(o.urgent?"<span>⚡ Urgent</span>":"")+'</div>' +
+    '<div style="font-size:13px;font-weight:700;margin-top:16px">Suivi de la commande</div>' + tl + actions;
+  document.getElementById("modal").classList.add("open");
+}
+function closeModal(){ document.getElementById("modal").classList.remove("open"); }
+
+// ---------------- Paramètres ----------------
+function applyBrand(){
+  document.title = settings.brand + " — Livraison express dans toute l'Algérie";
+  ["brandName","brandFooter"].forEach(function(id){ var e=document.getElementById(id); if(e) e.textContent=settings.brand; });
+}
+function renderPriceChips(){
+  var el = document.getElementById("priceChips");
+  if(!el) return;
+  el.innerHTML = [
+    "Même zone : "+fmt(settings.base),
+    "Zone voisine : "+fmt(settings.base+settings.step),
+    "Zone éloignée : "+fmt(settings.base+settings.step*2),
+    "Colis moyen : +"+fmt(settings.mid),
+    "Colis lourd : +"+fmt(settings.heavy),
+    "Urgent : ×"+settings.urgentMult
+  ].map(function(t){return "<span>"+t+"</span>";}).join("");
+}
+function renderZoneChips(){
+  var c = cityData(settings.city);
+  document.getElementById("setZones").innerHTML = c.zones.map(function(z){
+    var on = settings.zones[z.z-1];
+    return '<button type="button" class="chip '+(on?'':'off')+'" onclick="toggleZone('+z.z+')">' +
+      '<span class="dot" style="background:'+ZONE_COLORS[z.z]+'"></span>'+z.label+(on?" ✓":" (off)")+'</button>';
+  }).join("");
+}
+function toggleZone(z){
+  settings.zones[z-1] = !settings.zones[z-1];
+  persistSettings({zones:settings.zones}, "Zone "+zoneLabel(settings.city,z)+(settings.zones[z-1]?" activée":" désactivée"));
+  renderZoneChips();
+  fillZones();
+  updateEstimate();
+  if(adminUnlocked) renderGestion();
+}
+// Envoie uniquement les champs modifiés (les secrets masqués ne sont jamais réenvoyés)
+function persistSettings(patch, msg){
+  if(USE_API){
+    apiPost("/api/settings", patch)
+      .then(function(){ if(msg) toast(msg); })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+  } else {
+    saveSettings();
+    if(msg) toast(msg);
+  }
+}
+function applySettings(patch){
+  if(patch.adminPassword && String(patch.adminPassword).length<8){
+    toast("⚠️ Mot de passe trop court (8 caractères minimum)");
+    return;
+  }
+  Object.keys(patch).forEach(function(k){ settings[k]=patch[k]; });
+  var cityChanged = patch.city && patch.city!==formCity;
+  persistSettings(patch, "✓ Paramètres enregistrés");
+  if(cityChanged){
+    formCity = settings.city;
+    fillCitySelect();
+    fillZones();
+  }
+  applyBrand();
+  renderPriceChips();
+  renderZoneChips();
+  if(adminUnlocked) renderGestion();
+  updateEstimate();
+}
+function fillSettingsInputs(){
+  document.getElementById("setBrand").value = settings.brand;
+  document.getElementById("setWa").value = settings.waNumber;
+  document.getElementById("setBase").value = settings.base;
+  document.getElementById("setStep").value = settings.step;
+  document.getElementById("setMid").value = settings.mid;
+  document.getElementById("setHeavy").value = settings.heavy;
+  document.getElementById("setUrgent").value = String(settings.urgentMult);
+  document.getElementById("setWaToken").value = settings.waToken;
+  document.getElementById("setWaPhoneId").value = settings.waPhoneId;
+  document.getElementById("setTgToken").value = settings.tgToken;
+  document.getElementById("setTgChatId").value = settings.tgChatId;
+  // Le mot de passe n'est jamais pré-rempli (sécurité) : champ vide = inchangé
+  document.getElementById("setAdminPass").value = "";
+  var sc = document.getElementById("setCity");
+  sc.innerHTML = Object.keys(CITIES).map(function(k){
+    return "<option value=\""+k+"\""+(k===settings.city?" selected":"")+">"+CITIES[k].name+"</option>";
+  }).join("");
+}
+function resetSettingsUI(){
+  var keepPass = settings.adminPassword;   // le mot de passe gérant n'est jamais réinitialisé
+  var keepCity = settings.city;
+  settings = Object.assign({}, DEFAULT_SETTINGS, {zones:DEFAULT_SETTINGS.zones.slice(), adminPassword:keepPass, city:keepCity});
+  persistSettings({brand:settings.brand, waNumber:settings.waNumber, base:settings.base, step:settings.step,
+    mid:settings.mid, heavy:settings.heavy, urgentMult:settings.urgentMult, zones:settings.zones, city:settings.city},
+    "Paramètres réinitialisés (mot de passe conservé).");
+  fillSettingsInputs();
+  formCity = settings.city;
+  fillCitySelect();
+  fillZones();
+  applyBrand();
+  renderZoneChips();
+  renderPriceChips();
+  renderAll();
+  toast("Paramètres réinitialisés.");
+}
+function testWa(){
+  if(USE_API && settings.waToken && settings.waPhoneId){
+    apiPost("/api/send/whatsapp", {phone:settings.waNumber, text:"🔔 Test — Les commandes "+settings.brand+" seront confirmées sur WhatsApp."})
+      .then(function(r){ toast(r.result==="sent" ? "✅ Message WhatsApp envoyé !" : "⚠️ " + r.result); })
+      .catch(function(err){ toast("⚠️ " + err.message); });
+    return;
+  }
+  if(!waNumber(settings.waNumber)){ toast("⚠️ Entrez d'abord votre numéro WhatsApp dans Paramètres."); return; }
+  openWa(settings.waNumber, "🔔 Test — Les nouvelles commandes de "+settings.brand+" arriveront sur ce numéro.");
+  toast("Ouverture de WhatsApp… (bouton 📲 sans configuration)");
+}
+function testTelegram(){
+  if(!USE_API){ toast("⚠️ Le backend est hors ligne — le serveur doit tourner (node server.js)."); return; }
+  if(!settings.tgToken || !settings.tgChatId){ toast("⚠️ Renseignez le token et le chat ID du bot Telegram."); return; }
+  apiPost("/api/send/telegram", {text:"🔔 Test — "+settings.brand+" : les alertes (nouvelle commande, acceptée, livrée) arriveront ici."})
+    .then(function(r){ toast(r.result==="sent" ? "✅ Message Telegram envoyé !" : "⚠️ " + r.result); })
+    .catch(function(err){ toast("⚠️ " + err.message); });
+}
+
+function renderCitiesStrip(){
+  document.getElementById("citiesStrip").innerHTML = Object.keys(CITIES).map(function(k){
+    return "<span>📍 "+CITIES[k].name+"</span>";
+  }).join("") + "<span>🇩 + bientôt d'autres wilayas</span>";
+}
+
+function renderAll(){ renderCommande(); renderLivreur(); renderGestion(); }
+
+// ---------------- Init ----------------
+drivers = localDrivers();
+formCity = CITIES[settings.city] ? settings.city : "tizi-ouzou";
+renderCitiesStrip();
+fillCitySelect();
+fillZones();
+fillSettingsInputs();
+renderZoneChips();
+renderPriceChips();
+applyBrand();
+renderAll();
+detectApi().then(function(){
+  if(USE_API){
+    pullState();
+    POLL_TIMER = setInterval(pullState, 4000);
+  }
+});
+</script>
+</body>
+</html>

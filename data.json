@@ -1,0 +1,149 @@
+{
+  "counter": 1006,
+  "settings": {
+    "brand": "DawDZ",
+    "waNumber": "",
+    "city": "tizi-ouzou",
+    "base": 300,
+    "step": 100,
+    "mid": 100,
+    "heavy": 200,
+    "urgentMult": 1.5,
+    "zones": [
+      true,
+      true,
+      true,
+      true
+    ],
+    "waToken": "",
+    "waPhoneId": "",
+    "tgToken": "",
+    "tgChatId": "",
+    "adminPassword": "DzJxQMBzmPEJ!"
+  },
+  "orders": [
+    {
+      "id": "TZ-1001",
+      "from": "Azazga",
+      "to": "Tizi Ouzou-Centre",
+      "type": "colis",
+      "weight": "moyen",
+      "urgent": false,
+      "client": {
+        "name": "Nassima Aït Ahmed",
+        "phone": "0661 23 45 67"
+      },
+      "fee": 400,
+      "status": "encours",
+      "driver": "d2",
+      "createdAt": 1788612716143,
+      "acceptedAt": 1788614397793,
+      "deliveredAt": null,
+      "driverName": "Riad",
+      "city": "tizi-ouzou"
+    },
+    {
+      "id": "TZ-1002",
+      "from": "Aït Châfaa",
+      "to": "Bougaâ",
+      "type": "document",
+      "weight": "leger",
+      "urgent": false,
+      "client": {
+        "name": "Aïssa Meddah",
+        "phone": "0550 87 65 43"
+      },
+      "fee": 500,
+      "status": "attente",
+      "driver": null,
+      "createdAt": 1788612416143,
+      "acceptedAt": null,
+      "deliveredAt": null,
+      "city": "tizi-ouzou"
+    },
+    {
+      "id": "TZ-1003",
+      "from": "Tizi Ouzou-Centre",
+      "to": "Aïn El Hammam",
+      "type": "repas",
+      "weight": "leger",
+      "urgent": true,
+      "client": {
+        "name": "Mehdaoui Belkacem",
+        "phone": "0770 11 22 33"
+      },
+      "fee": 680,
+      "status": "livree",
+      "driver": "d1",
+      "createdAt": 1788609836143,
+      "acceptedAt": 1788610256143,
+      "deliveredAt": 1788611756143,
+      "driverName": "Mehdaoui",
+      "city": "tizi-ouzou"
+    },
+    {
+      "id": "TZ-1004",
+      "from": "Azazga",
+      "to": "Bougaâ",
+      "type": "colis",
+      "weight": "lourd",
+      "urgent": true,
+      "client": {
+        "name": "Test Client",
+        "phone": "0661 00 00 00"
+      },
+      "fee": 900,
+      "status": "livree",
+      "driver": "d2",
+      "createdAt": 1788612975858,
+      "acceptedAt": 1788612975868,
+      "deliveredAt": 1788612975878,
+      "driverName": "Riad",
+      "city": "tizi-ouzou"
+    },
+    {
+      "id": "TZ-1005",
+      "from": "Tizi Ouzou-Centre",
+      "to": "Akbou",
+      "type": "repas",
+      "weight": "leger",
+      "urgent": false,
+      "client": {
+        "name": "Test Publique",
+        "phone": "0555 00 11 22"
+      },
+      "fee": 500,
+      "status": "annulee",
+      "driver": null,
+      "createdAt": 1788613376534,
+      "acceptedAt": null,
+      "deliveredAt": null,
+      "city": "tizi-ouzou"
+    }
+  ],
+  "drivers": [
+    {
+      "id": "d1",
+      "name": "Mehdaoui",
+      "moto": "Yamaha FZ",
+      "phone": "0661 23 45 67",
+      "pinHash": "b68d1f370ebc3e14e503546965e6d89f6b3b11db1b30fc11b57a7a5d8b5c6e40"
+    },
+    {
+      "id": "d2",
+      "name": "Riad",
+      "moto": "Suzuki GD 110",
+      "phone": "0550 87 65 43",
+      "pinHash": "a8314d378a37e776fc6a9a8d03017a904954407a7cecd350e031ef16dd7b590f"
+    },
+    {
+      "id": "d3",
+      "name": "Youcef",
+      "moto": "Honda Click",
+      "phone": "0770 55 66 77",
+      "pinHash": "5add29cec27230d06f41e3ba0abbb83768c1b5fc0356462e5f3f6a5e574d74a9"
+    }
+  ],
+  "driverCounter": 4,
+  "salt": "2c58ab559862b1aa4102fed0926dcdf4"
+}
